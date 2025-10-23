@@ -2,6 +2,9 @@
 #include<glad/glad.h>
 #include<GLFW/glfw3.h>
 #include<stb/stb_image.h>
+#include<glm/glm.hpp>
+#include<glm/gtc/matrix_transform.hpp>
+#include<glm/gtc/type_ptr.hpp>
 
 #include "shader.h"
 #include "vbo.h"
@@ -13,16 +16,21 @@ const int DEFAULT_SCREEN_WIDTH = 1024;
 const int DEFAULT_SCREEN_HEIGHT = 1024;
 
 GLfloat vertices[] = {
-	// Coordinates      // Colors         // Texture coordinates
-	-0.5f,  0.5f, 0.0f, 1.0f, 0.0f, 0.0f, 0.0f, 1.0f, // Top left corner
-	 0.5f,  0.5f, 0.0f, 0.0f, 1.0f, 0.0f, 1.0f, 1.0f, // Top right corner
-	 0.5f, -0.5f, 0.0f, 0.0f, 0.0f, 1.0f, 1.0f, 0.0f, // Bottom right corner
-	-0.5f, -0.5f, 0.0f, 1.0f, 1.0f, 1.0f, 0.0f, 0.0f  // Bottom left corner
+	// Coordinates        // Colors              // Texture coordinates
+	-0.5f, 0.0f,  0.5f,   0.83f, 0.70f, 0.44f,   0.0f, 0.0f, 
+	-0.5f, 0.0f, -0.5f,   0.83f, 0.70f, 0.44f,   1.0f, 0.0f,
+	 0.5f, 0.0f, -0.5f,   0.83f, 0.70f, 0.44f,   0.0f, 0.0f,
+	 0.5f, 0.0f,  0.5f,   0.83f, 0.70f, 0.44f,   1.0f, 0.0f,
+	 0.0f, 0.8f,  0.0f,   0.92f, 0.86f, 0.76f,   0.5f, 1.0f,
 };
 
 GLuint indices[] = {
 	0, 1, 2,
-	0, 3, 2
+	0, 2, 3,
+	0, 1, 4,
+	1, 2, 4,
+	2, 3, 4,
+	0, 3, 4
 };
 
 void setWindowHints()
@@ -76,16 +84,45 @@ int main()
 	Texture obamaTexture("obama_texture_512.jpg", GL_TEXTURE_2D, GL_TEXTURE0, GL_RGB, GL_UNSIGNED_BYTE);
 	obamaTexture.TextureUnit(shaderProgram, "tex0", 0);
 
+	float rotation = 0.0f;
+	double previousTime = glfwGetTime();
+
+	glEnable(GL_DEPTH_TEST);
+
 	while (!glfwWindowShouldClose(window)) {
 		glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
-		glClear(GL_COLOR_BUFFER_BIT);
+		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 		
 		shaderProgram.Activate();
+
+		double currentTime = glfwGetTime();
+		if (currentTime - previousTime >= 1 / 60) {
+			rotation += 0.5f;
+			previousTime = currentTime;
+		}
+
+		glm::mat4 modelMatrix = glm::mat4(1.0f);
+		glm::mat4 viewMatrix = glm::mat4(1.0f);
+		glm::mat4 projectionMatrix = glm::mat4(1.0f);
+
+		modelMatrix = glm::rotate(modelMatrix, glm::radians(rotation), glm::vec3(0.0f, 1.0f, 0.0f));
+		viewMatrix = glm::translate(viewMatrix, glm::vec3(0.0f, -0.5f, -2.0f));
+		projectionMatrix = glm::perspective(glm::radians(45.0f), (float)(DEFAULT_SCREEN_WIDTH / DEFAULT_SCREEN_HEIGHT), 0.1f, 100.0f);
+
+		int modelLocation = glGetUniformLocation(shaderProgram.id, "modelMatrix");
+		glUniformMatrix4fv(modelLocation, 1, GL_FALSE, glm::value_ptr(modelMatrix));
+
+		int viewLocation = glGetUniformLocation(shaderProgram.id, "viewMatrix");
+		glUniformMatrix4fv(viewLocation, 1, GL_FALSE, glm::value_ptr(viewMatrix));
+
+		int projectionLocation = glGetUniformLocation(shaderProgram.id, "projectionMatrix");
+		glUniformMatrix4fv(projectionLocation, 1, GL_FALSE, glm::value_ptr(projectionMatrix));
+
 		glUniform1f(uniformId, 0.5f);
 		obamaTexture.Bind();
 		vao.Bind();
 
-		glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
+		glDrawElements(GL_TRIANGLES, sizeof(indices)/sizeof(int), GL_UNSIGNED_INT, 0);
 
 		glfwSwapBuffers(window);
 		glfwPollEvents();

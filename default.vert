@@ -7,15 +7,13 @@ out vec3 colorRGB;
 out vec2 texture2D;
 
 uniform float scale;
+uniform mat4 modelMatrix;
+uniform mat4 viewMatrix;
+uniform mat4 projectionMatrix;
 
 void main()
 {
-    gl_Position = vec4(
-        aPosition.x + aPosition.x * scale, 
-        aPosition.y + aPosition.y * scale, 
-        aPosition.z + aPosition.z * scale, 
-        1.0
-    );
+    gl_Position = projectionMatrix * viewMatrix * modelMatrix * vec4(aPosition, 1.0);
     colorRGB = aColorRGB;
     texture2D = aTexure2D;
 };
