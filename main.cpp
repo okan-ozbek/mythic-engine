@@ -11,12 +11,12 @@ const int DEFAULT_SCREEN_WIDTH = 640;
 const int DEFAULT_SCREEN_HEIGHT = 480;
 
 GLfloat vertices[] = {
-	-0.5f, -0.5f, 0.0f, // 0 = bottom left
-	0.5f, -0.5f, 0.0f, // 1 = bottom right
-	0.0f, 0.5f, 0.0f, // 2 = top middle
-	-0.25, 0.0f, 0.0f, // 3 = middle left
-	0.25, 0.0f, 0.0f, // 4 = middle right
-	0.0f, -0.5f, 0.0f // 5 = bottom middle
+	-0.5f, -0.5f, 0.0f,			0.8f, 0.3f, 0.02f, // 0 = bottom left
+	0.5f, -0.5f, 0.0f,			0.8f, 0.3f, 0.02f, // 1 = bottom right
+	0.0f, 0.5f, 0.0f,			1.0f, 0.6f, 0.32f, // 2 = top middle
+	-0.25, 0.0f, 0.0f,			0.9f, 0.45f, 0.17f, // 3 = middle left
+	0.25, 0.0f, 0.0f,			0.9f, 0.45f, 0.17f, // 4 = middle right
+	0.0f, -0.5f, 0.0f,			0.8f, 0.3f, 0.02f // 5 = bottom middle
 };
 
 GLuint indices[] = {
@@ -63,7 +63,9 @@ int main()
 	VBO vbo(vertices, sizeof(vertices));
 	EBO ebo(indices, sizeof(indices));
 
-	vao.LinkVBO(vbo, 0);
+	vao.LinkAttrib(vbo, 0, 3, GL_FLOAT, 6 * sizeof(float), (void*)0);
+	vao.LinkAttrib(vbo, 1, 3, GL_FLOAT, 6 * sizeof(float), (void*)(3 * sizeof(float)));
+
 	vao.Unbind();
 	vbo.Unbind();
 	ebo.Unbind();
