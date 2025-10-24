@@ -11,6 +11,7 @@
 #include "vao.h"
 #include "ebo.h"
 #include "texture.h"
+#include "camera.h"
 
 const int DEFAULT_SCREEN_WIDTH = 1024;
 const int DEFAULT_SCREEN_HEIGHT = 1024;
@@ -79,15 +80,13 @@ int main()
 	vbo.Unbind();
 	ebo.Unbind();
 
-	GLuint uniformId = glGetUniformLocation(shaderProgram.id, "scale");
 
 	Texture obamaTexture("obama_texture_512.jpg", GL_TEXTURE_2D, GL_TEXTURE0, GL_RGB, GL_UNSIGNED_BYTE);
 	obamaTexture.TextureUnit(shaderProgram, "tex0", 0);
 
-	float rotation = 0.0f;
-	double previousTime = glfwGetTime();
-
 	glEnable(GL_DEPTH_TEST);
+
+	Camera camera(DEFAULT_SCREEN_WIDTH, DEFAULT_SCREEN_HEIGHT, glm::vec3(0.0f, 0.0f, 2.0f));
 
 	while (!glfwWindowShouldClose(window)) {
 		glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
@@ -95,30 +94,10 @@ int main()
 		
 		shaderProgram.Activate();
 
-		double currentTime = glfwGetTime();
-		if (currentTime - previousTime >= 1 / 60) {
-			rotation += 0.5f;
-			previousTime = currentTime;
-		}
+		camera.Inputs(window);
+		camera.Matrix(45.0f, 0.1f, 100.0f, shaderProgram, "cameraMatrix");
 
-		glm::mat4 modelMatrix = glm::mat4(1.0f);
-		glm::mat4 viewMatrix = glm::mat4(1.0f);
-		glm::mat4 projectionMatrix = glm::mat4(1.0f);
 
-		modelMatrix = glm::rotate(modelMatrix, glm::radians(rotation), glm::vec3(0.0f, 1.0f, 0.0f));
-		viewMatrix = glm::translate(viewMatrix, glm::vec3(0.0f, -0.5f, -2.0f));
-		projectionMatrix = glm::perspective(glm::radians(45.0f), (float)(DEFAULT_SCREEN_WIDTH / DEFAULT_SCREEN_HEIGHT), 0.1f, 100.0f);
-
-		int modelLocation = glGetUniformLocation(shaderProgram.id, "modelMatrix");
-		glUniformMatrix4fv(modelLocation, 1, GL_FALSE, glm::value_ptr(modelMatrix));
-
-		int viewLocation = glGetUniformLocation(shaderProgram.id, "viewMatrix");
-		glUniformMatrix4fv(viewLocation, 1, GL_FALSE, glm::value_ptr(viewMatrix));
-
-		int projectionLocation = glGetUniformLocation(shaderProgram.id, "projectionMatrix");
-		glUniformMatrix4fv(projectionLocation, 1, GL_FALSE, glm::value_ptr(projectionMatrix));
-
-		glUniform1f(uniformId, 0.5f);
 		obamaTexture.Bind();
 		vao.Bind();
 
